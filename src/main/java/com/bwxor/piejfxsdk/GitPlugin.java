@@ -7,7 +7,6 @@ import com.bwxor.piejfxsdk.service.GitService;
 import com.bwxor.piejfxsdk.state.ConfigurationState;
 import com.bwxor.piejfxsdk.state.RepositoryState;
 import com.bwxor.piejfxsdk.state.ServiceState;
-import com.bwxor.piejfxsdk.state.UIState;
 import com.bwxor.plugin.Plugin;
 import com.bwxor.plugin.input.PluginContext;
 import javafx.scene.control.*;
@@ -17,7 +16,6 @@ import org.eclipse.jgit.api.Git;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.sql.SQLOutput;
 
 public class GitPlugin implements Plugin {
     private PluginContext pluginContext;
@@ -27,7 +25,6 @@ public class GitPlugin implements Plugin {
     @Override
     public void onLoad(PluginContext pluginContext) {
         ServiceState serviceState = ServiceState.instance;
-        UIState uiState = UIState.instance;
 
         serviceState.setGitService(new GitService());
         serviceState.setConfigurationService(new ConfigurationService());

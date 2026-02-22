@@ -1,11 +1,13 @@
 package com.bwxor.piejfxsdk.factory;
 
 import com.bwxor.piejfxsdk.handler.ListViewDoubleClickEventHandler;
+import com.bwxor.piejfxsdk.state.ServiceState;
 import com.bwxor.piejfxsdk.state.UIState;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 public class TabFactory {
@@ -14,24 +16,38 @@ public class TabFactory {
 
         SplitPane mainSplitPane = new SplitPane();
         mainSplitPane.setOrientation(Orientation.VERTICAL);
+        mainSplitPane.setDividerPosition(0, 0.75);
         tab.setContent(mainSplitPane);
 
         mainSplitPane.getItems().add(createListViewsScrollPane());
-
-
-        VBox commitVBox = new VBox();
-        TextArea commitMessageTextArea = new TextArea();
-        commitMessageTextArea.setPromptText("Commit message...");
-        commitVBox.getChildren().add(commitMessageTextArea);
-
-        HBox commitHBox = new HBox();
-        Button commitButton = new Button("Commit");
-        commitHBox.getChildren().add(commitButton);
-        commitVBox.getChildren().add(commitHBox);
-
-        mainSplitPane.getItems().add(commitVBox);
+        mainSplitPane.getItems().add(createCommitVBox());
 
         return tab;
+    }
+
+    private static VBox createCommitVBox() {
+        UIState uiState = UIState.instance;
+
+        VBox commitVBox = new VBox();
+
+        TextArea commitMessageTextArea = new TextArea();
+        commitMessageTextArea.setPromptText("Commit message...");
+        uiState.setCommitMessageTextArea(commitMessageTextArea);
+        commitVBox.getChildren().add(commitMessageTextArea);
+        VBox.setVgrow(commitMessageTextArea, Priority.ALWAYS);
+        commitVBox.getChildren().add(createCommitHBox());
+
+        return commitVBox;
+    }
+
+    private static HBox createCommitHBox() {
+        HBox commitHBox = new HBox();
+
+        commitHBox.setPadding(new Insets(5, 10, 5, 10));
+        commitHBox.getChildren().add(createCommitButton());
+        commitHBox.getChildren().add(createCommitLogButton());
+
+        return commitHBox;
     }
 
     private static ScrollPane createListViewsScrollPane() {
@@ -39,6 +55,7 @@ public class TabFactory {
 
         listViewsScrollPane.setContent(createListViewsVBox());
         listViewsScrollPane.setFitToWidth(true);
+        listViewsScrollPane.setFitToHeight(true);
 
         return listViewsScrollPane;
     }
@@ -46,8 +63,14 @@ public class TabFactory {
     private static VBox createListViewsVBox() {
         VBox listViewsVBox = new VBox();
 
-        listViewsVBox.getChildren().add(createStagedVBox());
-        listViewsVBox.getChildren().add(createUnstagedVBox());
+        var stagedVBox = createStagedVBox();
+        var unstagedVBox = createUnstagedVBox();
+
+        listViewsVBox.getChildren().add(stagedVBox);
+        listViewsVBox.getChildren().add(unstagedVBox);
+
+        VBox.setVgrow(stagedVBox, Priority.ALWAYS);
+        VBox.setVgrow(unstagedVBox, Priority.ALWAYS);
 
         return listViewsVBox;
     }
@@ -71,8 +94,6 @@ public class TabFactory {
         ListView stagedListView = new ListView();
 
         stagedListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        stagedListView.setMaxHeight(7 * 24 + 2);
-        stagedListView.setPrefHeight(7 * 24 + 2);
         stagedListView.setOnMouseClicked(e -> ListViewDoubleClickEventHandler.handle(e, stagedListView));
         stagedListView.setContextMenu(ListViewContextMenuFactory.createStagedListViewContextMenu());
 
@@ -98,13 +119,30 @@ public class TabFactory {
 
         ListView unstagedListView = new ListView();
         unstagedListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        unstagedListView.setMaxHeight(7 * 24 + 2);
-        unstagedListView.setPrefHeight(7 * 24 + 2);
         unstagedListView.setOnMouseClicked(e -> ListViewDoubleClickEventHandler.handle(e, unstagedListView));
         unstagedListView.setContextMenu(ListViewContextMenuFactory.createUnstagedListViewContextMenu());
 
         uiState.setUnstagedListView(unstagedListView);
 
         return unstagedListView;
+    }
+
+    private static Button createCommitButton() {
+        ServiceState serviceState = ServiceState.instance;
+        UIState uiState = UIState.instance;
+
+        Button commitButton = new Button("Commit");
+
+        commitButton.setOnAction(_ -> {
+            serviceState.getGitService().commit(uiState.getCommitMessageTextArea().getText());
+        });
+
+        return commitButton;
+    }
+
+    private static Button createCommitLogButton() {
+        Button commitLogButton = new Button("Commit log");
+
+        return commitLogButton;
     }
 }

@@ -1,6 +1,7 @@
 package com.bwxor.piejfxsdk.service;
 
 import com.bwxor.piejfxsdk.factory.ListViewCellFactory;
+import com.bwxor.piejfxsdk.state.ConfigurationState;
 import com.bwxor.piejfxsdk.state.RepositoryState;
 import com.bwxor.piejfxsdk.state.ServiceState;
 import com.bwxor.piejfxsdk.state.UIState;
@@ -10,6 +11,7 @@ import javafx.scene.layout.VBox;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.PersonIdent;
 
 import java.io.File;
 import java.util.Collection;
@@ -78,8 +80,7 @@ public class GitService {
         try {
             if (filePattern.startsWith("✖")) {
                 repositoryState.getRepo().rm().addFilepattern(filePattern.substring(2)).call();
-            }
-            else {
+            } else {
                 repositoryState.getRepo().add().addFilepattern(filePattern.substring(2)).call();
             }
             resetListViews();
@@ -97,6 +98,41 @@ public class GitService {
             resetListViews();
         } catch (GitAPIException e) {
             serviceState.getNotificationService().showNotificationOk("Could not add file " + filePattern + " to staging area.");
+        }
+    }
+
+    public void commit(String message) {
+        ServiceState serviceState = ServiceState.instance;
+        ConfigurationState configurationState = ConfigurationState.instance;
+        RepositoryState repositoryState = RepositoryState.instance;
+        UIState uiState = UIState.instance;
+
+        if (message.trim().isEmpty()) {
+            serviceState.getNotificationService().showNotificationOk("Cannot commit with an empty message.");
+            return;
+        }
+
+        if (configurationState.getLocalCredentials().getAuthorEmail() == null ||
+                configurationState.getLocalCredentials().getAuthorEmail().trim().isEmpty()
+                || configurationState.getLocalCredentials().getAuthorName() == null ||
+                configurationState.getLocalCredentials().getAuthorName().trim().isEmpty()) {
+            serviceState.getNotificationService().showNotificationOk("Please fill in your local credentials before doing a commit.");
+            return;
+        }
+
+        if (uiState.getStagedListView().getItems().isEmpty()) {
+            serviceState.getNotificationService().showNotificationOk("You don't have any staged changes to commit.");
+            return;
+        }
+
+        try {
+            var personIdent = new PersonIdent(configurationState.getLocalCredentials().getAuthorName(), configurationState.getLocalCredentials().getAuthorEmail());
+            repositoryState.getRepo().commit().setMessage(message).setAuthor(personIdent).call();
+            serviceState.getNotificationService().showNotificationOk("Commit successful.");
+            resetListViews();
+            uiState.getCommitMessageTextArea().clear();
+        } catch (GitAPIException e) {
+            serviceState.getNotificationService().showNotificationOk("Could not commit changes.");
         }
     }
 }

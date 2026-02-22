@@ -21,24 +21,24 @@ public class MenuFactory {
         initializeRepositoryMenuItem.setOnAction(_ -> {
             serviceState.getGitService().initialize();
         });
+        menu.getItems().add(initializeRepositoryMenuItem);
 
         MenuItem cloneRepositoryMenuItem = new MenuItem("Clone...");
         cloneRepositoryMenuItem.setDisable(true);
+        menu.getItems().add(cloneRepositoryMenuItem);
 
         MenuItem pushMenuItem = new MenuItem("Push...");
         pushMenuItem.setDisable(true);
+        menu.getItems().add(pushMenuItem);
 
         MenuItem pullMenuItem = new MenuItem("Pull...");
         pullMenuItem.setDisable(true);
+        menu.getItems().add(pullMenuItem);
 
         MenuItem settingsMenuItem = new MenuItem("Settings");
         settingsMenuItem.setOnAction(_ -> serviceState.getFileService().openFile(Paths.get(configurationState.getConfigurationDirectory().toString(), "config.json").toFile()));
-
-        menu.getItems().add(initializeRepositoryMenuItem);
-        menu.getItems().add(cloneRepositoryMenuItem);
-        menu.getItems().add(pushMenuItem);
-        menu.getItems().add(pullMenuItem);
         menu.getItems().add(settingsMenuItem);
+
 
         return menu;
     }
