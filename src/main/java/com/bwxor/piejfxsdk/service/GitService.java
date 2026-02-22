@@ -1,5 +1,6 @@
 package com.bwxor.piejfxsdk.service;
 
+import com.bwxor.piejfxsdk.factory.ListViewCellFactory;
 import com.bwxor.piejfxsdk.state.RepositoryState;
 import com.bwxor.piejfxsdk.state.ServiceState;
 import com.bwxor.piejfxsdk.state.UIState;
@@ -10,6 +11,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
@@ -44,27 +46,57 @@ public class GitService {
 
         Platform.runLater(() -> {
             List<String> stagedItems = Stream.of(
-                            status.getAdded(),
-                            status.getChanged(),
-                            status.getRemoved()
+                            status.getAdded().stream().map(s -> "✚ " + s).toList(),
+                            status.getChanged().stream().map(s -> "✱ " + s).toList(),
+                            status.getRemoved().stream().map(s -> "✖ " + s).toList()
                     )
                     .filter(d -> !d.isEmpty())
                     .flatMap(Collection::stream)
                     .toList();
 
             uiState.getStagedListView().getItems().setAll(stagedItems);
+            uiState.getStagedListView().setCellFactory(_ -> new ListViewCellFactory());
 
             List<String> unstagedItems = Stream.of(
-                            status.getModified(),
-                            status.getUntracked(),
-                            status.getMissing()
+                            status.getModified().stream().map(s -> "✱ " + s).toList(),
+                            status.getUntracked().stream().map(s -> "✚ " + s).toList(),
+                            status.getMissing().stream().map(s -> "✖ " + s).toList()
                     )
                     .filter(d -> !d.isEmpty())
                     .flatMap(Collection::stream)
                     .toList();
-            ;
-            uiState.getUnstagedListView().getItems().setAll(unstagedItems);
-        });
 
+            uiState.getUnstagedListView().getItems().setAll(unstagedItems);
+            uiState.getUnstagedListView().setCellFactory(_ -> new ListViewCellFactory());
+        });
+    }
+
+    public void addFileToStagingArea(String filePattern) {
+        ServiceState serviceState = ServiceState.instance;
+        RepositoryState repositoryState = RepositoryState.instance;
+
+        try {
+            if (filePattern.startsWith("✖")) {
+                repositoryState.getRepo().rm().addFilepattern(filePattern.substring(2)).call();
+            }
+            else {
+                repositoryState.getRepo().add().addFilepattern(filePattern.substring(2)).call();
+            }
+            resetListViews();
+        } catch (GitAPIException e) {
+            serviceState.getNotificationService().showNotificationOk("Could not add file " + filePattern + " to staging area.");
+        }
+    }
+
+    public void removeFileFromStagingArea(String filePattern) {
+        ServiceState serviceState = ServiceState.instance;
+        RepositoryState repositoryState = RepositoryState.instance;
+
+        try {
+            repositoryState.getRepo().reset().addPath(filePattern.substring(2)).setRef("HEAD").call();
+            resetListViews();
+        } catch (GitAPIException e) {
+            serviceState.getNotificationService().showNotificationOk("Could not add file " + filePattern + " to staging area.");
+        }
     }
 }
