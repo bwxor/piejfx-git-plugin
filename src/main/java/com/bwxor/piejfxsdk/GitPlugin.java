@@ -119,6 +119,11 @@ public class GitPlugin implements Plugin {
     }
 
     @Override
+    public void onRenameFile(File file) {
+
+    }
+
+    @Override
     public void onDeleteFile(File file) {
         RepositoryState repositoryState = RepositoryState.instance;
         ServiceState serviceState = ServiceState.instance;

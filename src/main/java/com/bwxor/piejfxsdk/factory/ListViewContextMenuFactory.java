@@ -24,6 +24,16 @@ public class ListViewContextMenuFactory {
         });
         contextMenu.getItems().add(stageMenuItem);
 
+        var rollbackMenuItem = new MenuItem("Rollback");
+        rollbackMenuItem.setOnAction(_ -> {
+            var selectedItems = uiState.getStagedListView().getSelectionModel().getSelectedItems();
+
+            if (!selectedItems.isEmpty()) {
+                serviceState.getGitService().rollbackFromStaged(selectedItems);
+            }
+        });
+        contextMenu.getItems().add(rollbackMenuItem);
+
         return contextMenu;
     }
 
@@ -43,8 +53,17 @@ public class ListViewContextMenuFactory {
                 );
             }
         });
-
         contextMenu.getItems().add(unstageMenuItem);
+
+        var rollbackMenuItem = new MenuItem("Rollback");
+        rollbackMenuItem.setOnAction(_ -> {
+            var selectedItems = uiState.getUnstagedListView().getSelectionModel().getSelectedItems();
+
+            if (!selectedItems.isEmpty()) {
+                serviceState.getGitService().rollbackFromUnstaged(selectedItems);
+            }
+        });
+        contextMenu.getItems().add(rollbackMenuItem);
 
         return contextMenu;
     }

@@ -44,6 +44,7 @@ public class TabFactory {
         HBox commitHBox = new HBox();
 
         commitHBox.setPadding(new Insets(5, 10, 5, 10));
+        commitHBox.setSpacing(5);
         commitHBox.getChildren().add(createCommitButton());
         commitHBox.getChildren().add(createCommitLogButton());
 
