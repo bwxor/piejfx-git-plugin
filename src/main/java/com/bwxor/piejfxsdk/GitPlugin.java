@@ -4,6 +4,9 @@ import com.bwxor.piejfxsdk.factory.MenuFactory;
 import com.bwxor.piejfxsdk.factory.TabFactory;
 import com.bwxor.piejfxsdk.service.ConfigurationService;
 import com.bwxor.piejfxsdk.service.GitCloneViewService;
+import com.bwxor.piejfxsdk.service.GitCommitFilesViewService;
+import com.bwxor.piejfxsdk.service.GitFileDiffViewService;
+import com.bwxor.piejfxsdk.service.GitLogViewService;
 import com.bwxor.piejfxsdk.service.GitService;
 import com.bwxor.piejfxsdk.service.ResourceService;
 import com.bwxor.piejfxsdk.state.ConfigurationState;
@@ -37,6 +40,9 @@ public class GitPlugin implements Plugin {
         serviceState.setNotificationService(pluginContext.getServiceContainer().getNotificationService());
         serviceState.setResourceService(new ResourceService());
         serviceState.setGitCloneViewService(new GitCloneViewService());
+        serviceState.setGitLogViewService(new GitLogViewService());
+        serviceState.setGitCommitFilesViewService(new GitCommitFilesViewService());
+        serviceState.setGitFileDiffViewService(new GitFileDiffViewService());
 
         stylesheetState.setThemeURL(pluginContext.getStylesheets().getThemeURL());
         stylesheetState.setDefaultStylesheetURL(pluginContext.getStylesheets().getDefaultStylesURL());

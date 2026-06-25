@@ -1,6 +1,8 @@
 package com.bwxor.piejfxsdk.service;
 
 import com.bwxor.piejfxsdk.dto.CloneViewResponse;
+import com.bwxor.piejfxsdk.dto.CommitFilesEntry;
+import com.bwxor.piejfxsdk.dto.CommitLogEntry;
 import com.bwxor.piejfxsdk.factory.ListViewCellFactory;
 import com.bwxor.piejfxsdk.state.ConfigurationState;
 import com.bwxor.piejfxsdk.state.RepositoryState;
@@ -18,7 +20,21 @@ import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
+import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectLoader;
+import org.eclipse.jgit.lib.ObjectReader;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.treewalk.AbstractTreeIterator;
+import org.eclipse.jgit.treewalk.CanonicalTreeParser;
+import org.eclipse.jgit.treewalk.EmptyTreeIterator;
+import org.eclipse.jgit.treewalk.TreeWalk;
+
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
@@ -389,6 +405,129 @@ public class GitService {
         } catch (GitAPIException e) {
             serviceState.getNotificationService()
                     .showNotificationOk("Could not rollback file(s).");
+        }
+    }
+
+    public void showCommitLog() {
+        ServiceState serviceState = ServiceState.instance;
+        RepositoryState repositoryState = RepositoryState.instance;
+
+        if (repositoryState.getRepo() == null) {
+            serviceState.getNotificationService().showNotificationOk("No repository is open.");
+            return;
+        }
+
+        List<CommitLogEntry> entries = new ArrayList<>();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        try {
+            for (var commit : repositoryState.getRepo().log().call()) {
+                String hash = commit.abbreviate(7).name();
+                String fullHash = commit.getName();
+                String author = commit.getAuthorIdent().getName();
+                String date = sdf.format(Date.from(commit.getAuthorIdent().getWhenAsInstant()));
+                String message = commit.getShortMessage();
+                entries.add(new CommitLogEntry(hash, fullHash, author, date, message));
+            }
+        } catch (Exception e) {
+            serviceState.getNotificationService().showNotificationOk("Could not load commit log.");
+            return;
+        }
+
+        serviceState.getGitLogViewService().showGitLogWindow(entries);
+    }
+
+    public void showCommitFiles(String fullHash) {
+        ServiceState serviceState = ServiceState.instance;
+        RepositoryState repositoryState = RepositoryState.instance;
+
+        List<CommitFilesEntry> entries = new ArrayList<>();
+
+        try {
+            var repo = repositoryState.getRepo().getRepository();
+            try (RevWalk revWalk = new RevWalk(repo);
+                 ObjectReader reader = repo.newObjectReader()) {
+
+                RevCommit commit = revWalk.parseCommit(repo.resolve(fullHash));
+
+                AbstractTreeIterator newTree = new CanonicalTreeParser(null, reader, commit.getTree());
+                AbstractTreeIterator oldTree;
+
+                if (commit.getParentCount() > 0) {
+                    RevCommit parent = revWalk.parseCommit(commit.getParent(0).getId());
+                    oldTree = new CanonicalTreeParser(null, reader, parent.getTree());
+                } else {
+                    oldTree = new EmptyTreeIterator();
+                }
+
+                List<DiffEntry> diffs = repositoryState.getRepo()
+                        .diff()
+                        .setOldTree(oldTree)
+                        .setNewTree(newTree)
+                        .call();
+
+                for (DiffEntry diff : diffs) {
+                    String status = diff.getChangeType().name();
+                    String path = diff.getChangeType() == DiffEntry.ChangeType.DELETE
+                            ? diff.getOldPath()
+                            : diff.getNewPath();
+                    entries.add(new CommitFilesEntry(status, path, fullHash));
+                }
+            }
+        } catch (Exception e) {
+            serviceState.getNotificationService().showNotificationOk("Could not load changed files.");
+            return;
+        }
+
+        serviceState.getGitCommitFilesViewService().showCommitFilesWindow(fullHash.substring(0, 7), entries);
+    }
+
+    public void showFileDiff(String commitFullHash, String path, DiffEntry.ChangeType changeType) {
+        ServiceState serviceState = ServiceState.instance;
+        RepositoryState repositoryState = RepositoryState.instance;
+
+        try {
+            var repo = repositoryState.getRepo().getRepository();
+            try (RevWalk revWalk = new RevWalk(repo);
+                 ObjectReader reader = repo.newObjectReader()) {
+
+                RevCommit commit = revWalk.parseCommit(repo.resolve(commitFullHash));
+
+                String oldContent = "";
+                String newContent = "";
+                String oldLabel = "Before";
+                String newLabel = "After (" + commit.abbreviate(7).name() + ")";
+
+                if (changeType != DiffEntry.ChangeType.ADD) {
+                    RevCommit parent = revWalk.parseCommit(commit.getParent(0).getId());
+                    oldContent = readFileAtCommit(repo, reader, parent, path.equals(DiffEntry.DEV_NULL) ? path : path);
+                    oldLabel = "Before (" + parent.abbreviate(7).name() + ")";
+                }
+
+                if (changeType != DiffEntry.ChangeType.DELETE) {
+                    newContent = readFileAtCommit(repo, reader, commit, path);
+                }
+
+                serviceState.getGitFileDiffViewService()
+                        .showFileDiffWindow(path, oldLabel, oldContent, newLabel, newContent);
+            }
+        } catch (Exception e) {
+            serviceState.getNotificationService().showNotificationOk("Could not load file diff.");
+            e.printStackTrace();
+        }
+    }
+
+    private String readFileAtCommit(org.eclipse.jgit.lib.Repository repo,
+                                    ObjectReader reader,
+                                    RevCommit commit,
+                                    String path) throws Exception {
+        try (TreeWalk treeWalk = TreeWalk.forPath(reader, path, commit.getTree())) {
+            if (treeWalk == null) {
+                return "(file not found)";
+            }
+            ObjectId blobId = treeWalk.getObjectId(0);
+            ObjectLoader loader = repo.open(blobId);
+            return new String(loader.getBytes(), java.nio.charset.StandardCharsets.UTF_8);
         }
     }
 

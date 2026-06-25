@@ -142,7 +142,10 @@ public class TabFactory {
     }
 
     private static Button createCommitLogButton() {
+        ServiceState serviceState = ServiceState.instance;
+
         Button commitLogButton = new Button("Commit log");
+        commitLogButton.setOnAction(_ -> serviceState.getGitService().showCommitLog());
 
         return commitLogButton;
     }

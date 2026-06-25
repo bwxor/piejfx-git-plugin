@@ -2,6 +2,9 @@ package com.bwxor.piejfxsdk.state;
 
 import com.bwxor.piejfxsdk.service.ConfigurationService;
 import com.bwxor.piejfxsdk.service.GitCloneViewService;
+import com.bwxor.piejfxsdk.service.GitCommitFilesViewService;
+import com.bwxor.piejfxsdk.service.GitFileDiffViewService;
+import com.bwxor.piejfxsdk.service.GitLogViewService;
 import com.bwxor.piejfxsdk.service.GitService;
 import com.bwxor.piejfxsdk.service.ResourceService;
 import com.bwxor.plugin.service.PluginFileService;
@@ -15,6 +18,9 @@ public class ServiceState {
     private PluginNotificationService notificationService;
     private ResourceService resourceService;
     private GitCloneViewService gitCloneViewService;
+    private GitLogViewService gitLogViewService;
+    private GitCommitFilesViewService gitCommitFilesViewService;
+    private GitFileDiffViewService gitFileDiffViewService;
     public static final ServiceState instance = new ServiceState();
 
     private ServiceState() {}
@@ -65,5 +71,29 @@ public class ServiceState {
 
     public void setGitCloneViewService(GitCloneViewService gitCloneViewService) {
         this.gitCloneViewService = gitCloneViewService;
+    }
+
+    public GitLogViewService getGitLogViewService() {
+        return gitLogViewService;
+    }
+
+    public void setGitLogViewService(GitLogViewService gitLogViewService) {
+        this.gitLogViewService = gitLogViewService;
+    }
+
+    public GitCommitFilesViewService getGitCommitFilesViewService() {
+        return gitCommitFilesViewService;
+    }
+
+    public void setGitCommitFilesViewService(GitCommitFilesViewService gitCommitFilesViewService) {
+        this.gitCommitFilesViewService = gitCommitFilesViewService;
+    }
+
+    public GitFileDiffViewService getGitFileDiffViewService() {
+        return gitFileDiffViewService;
+    }
+
+    public void setGitFileDiffViewService(GitFileDiffViewService gitFileDiffViewService) {
+        this.gitFileDiffViewService = gitFileDiffViewService;
     }
 }
