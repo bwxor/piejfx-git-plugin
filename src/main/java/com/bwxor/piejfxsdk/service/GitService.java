@@ -1,10 +1,12 @@
 package com.bwxor.piejfxsdk.service;
 
+import com.bwxor.piejfxsdk.dto.CloneViewResponse;
 import com.bwxor.piejfxsdk.factory.ListViewCellFactory;
 import com.bwxor.piejfxsdk.state.ConfigurationState;
 import com.bwxor.piejfxsdk.state.RepositoryState;
 import com.bwxor.piejfxsdk.state.ServiceState;
 import com.bwxor.piejfxsdk.state.UIState;
+import com.bwxor.piejfxsdk.type.CloneViewDialogChoice;
 import com.bwxor.piejfxsdk.util.StringUtil;
 import javafx.application.Platform;
 import org.eclipse.jgit.api.Git;
@@ -16,6 +18,7 @@ import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
@@ -343,8 +346,13 @@ public class GitService {
         ServiceState serviceState = ServiceState.instance;
         RepositoryState repositoryState = RepositoryState.instance;
 
-        var resetCmd = repositoryState.getRepo().reset();
-        var checkoutCmd = repositoryState.getRepo().checkout();
+        var resetCmd = repositoryState.getRepo()
+                .reset()
+                .setRef("HEAD");
+        var checkoutCmd = repositoryState.getRepo()
+                .checkout()
+                .setStartPoint("HEAD")
+                .setForced(true);
         for (String f : files) {
             resetCmd.addPath(f.substring(2));
             checkoutCmd.addPath(f.substring(2));
@@ -365,7 +373,11 @@ public class GitService {
         ServiceState serviceState = ServiceState.instance;
         RepositoryState repositoryState = RepositoryState.instance;
 
-        var checkoutCmd = repositoryState.getRepo().checkout();
+        var checkoutCmd = repositoryState
+                .getRepo()
+                .checkout()
+                .setStartPoint("HEAD")
+                .setForced(true);
         for (String f : files) {
             checkoutCmd.addPath(f.substring(2));
         }
@@ -377,6 +389,78 @@ public class GitService {
         } catch (GitAPIException e) {
             serviceState.getNotificationService()
                     .showNotificationOk("Could not rollback file(s).");
+        }
+    }
+
+    public void performClone() {
+        ServiceState serviceState = ServiceState.instance;
+        RepositoryState repositoryState = RepositoryState.instance;
+
+        var response = serviceState.getGitCloneViewService().showGitCloneWindow();
+
+        if (response.choice() != CloneViewDialogChoice.OK) {
+            return;
+        }
+
+        String repositoryUrl = response.repoUrl();
+        String destinationPath = response.destinationUrl();
+
+        if (repositoryUrl == null || repositoryUrl.isBlank()) {
+            serviceState.getNotificationService()
+                    .showNotificationOk("Repository URL is required.");
+            return;
+        }
+
+        if (destinationPath == null || destinationPath.isBlank()) {
+            serviceState.getNotificationService()
+                    .showNotificationOk("Destination directory is required.");
+            return;
+        }
+
+        File destination = new File(destinationPath);
+
+        if (destination.exists() && destination.isFile()) {
+            serviceState.getNotificationService()
+                    .showNotificationOk("Destination must be a directory.");
+            return;
+        }
+
+        if (destination.exists() && destination.listFiles() != null
+                && destination.listFiles().length > 0) {
+            serviceState.getNotificationService()
+                    .showNotificationOk("Destination directory is not empty.");
+            return;
+        }
+
+        try (Git _ = Git.cloneRepository()
+                .setURI(repositoryUrl)
+                .setDirectory(destination)
+                .call()) {
+
+            var repo = Git.open(destination);
+            repositoryState.setRepo(repo);
+            resetListViews();
+
+            serviceState.getFileService().openFolder(destination);
+
+            serviceState.getNotificationService()
+                    .showNotificationOk("Repository cloned successfully.");
+
+        } catch (InvalidRemoteException e) {
+            serviceState.getNotificationService()
+                    .showNotificationOk("Invalid repository URL.");
+
+        } catch (TransportException e) {
+            serviceState.getNotificationService()
+                    .showNotificationOk("Could not connect to the remote repository.\n" + e.getMessage());
+
+        } catch (GitAPIException e) {
+            serviceState.getNotificationService()
+                    .showNotificationOk("Failed to clone repository.\n" + e.getMessage());
+
+        } catch (Exception e) {
+            serviceState.getNotificationService()
+                    .showNotificationOk("Unexpected error.\n" + e.getMessage());
         }
     }
 }

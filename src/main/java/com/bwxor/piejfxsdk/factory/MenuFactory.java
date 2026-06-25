@@ -2,6 +2,7 @@ package com.bwxor.piejfxsdk.factory;
 
 import com.bwxor.piejfxsdk.state.ConfigurationState;
 import com.bwxor.piejfxsdk.state.ServiceState;
+import com.bwxor.piejfxsdk.state.UIState;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 
@@ -19,7 +20,7 @@ public class MenuFactory {
         menu.getItems().add(initializeRepositoryMenuItem);
 
         MenuItem cloneRepositoryMenuItem = new MenuItem("Clone...");
-        cloneRepositoryMenuItem.setDisable(true);
+        cloneRepositoryMenuItem.setOnAction(_ -> serviceState.getGitService().performClone());
         menu.getItems().add(cloneRepositoryMenuItem);
 
         MenuItem pushMenuItem = new MenuItem("Push...");

@@ -16,8 +16,10 @@ public class ListViewCellFactory extends ListCell<String> {
 
             if (item.startsWith("✚ ")) {
                 setStyle("-fx-text-fill: #42E3A7;");
-            } else if (item.startsWith("✖ ")){
+            } else if (item.startsWith("✖ ")) {
                 setStyle("-fx-text-fill: #E3425A;");
+            } else {
+                setStyle("");
             }
         }
     }

@@ -3,10 +3,13 @@ package com.bwxor.piejfxsdk;
 import com.bwxor.piejfxsdk.factory.MenuFactory;
 import com.bwxor.piejfxsdk.factory.TabFactory;
 import com.bwxor.piejfxsdk.service.ConfigurationService;
+import com.bwxor.piejfxsdk.service.GitCloneViewService;
 import com.bwxor.piejfxsdk.service.GitService;
+import com.bwxor.piejfxsdk.service.ResourceService;
 import com.bwxor.piejfxsdk.state.ConfigurationState;
 import com.bwxor.piejfxsdk.state.RepositoryState;
 import com.bwxor.piejfxsdk.state.ServiceState;
+import com.bwxor.piejfxsdk.state.StylesheetState;
 import com.bwxor.plugin.Plugin;
 import com.bwxor.plugin.input.PluginContext;
 import javafx.scene.control.*;
@@ -15,6 +18,7 @@ import org.eclipse.jgit.api.Git;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Paths;
 
 public class GitPlugin implements Plugin {
@@ -25,11 +29,18 @@ public class GitPlugin implements Plugin {
     @Override
     public void onLoad(PluginContext pluginContext) {
         ServiceState serviceState = ServiceState.instance;
+        StylesheetState stylesheetState = StylesheetState.instance;
 
         serviceState.setGitService(new GitService());
         serviceState.setConfigurationService(new ConfigurationService());
         serviceState.setFileService(pluginContext.getServiceContainer().getFileService());
         serviceState.setNotificationService(pluginContext.getServiceContainer().getNotificationService());
+        serviceState.setResourceService(new ResourceService());
+        serviceState.setGitCloneViewService(new GitCloneViewService());
+
+        stylesheetState.setThemeURL(pluginContext.getStylesheets().getThemeURL());
+        stylesheetState.setDefaultStylesheetURL(pluginContext.getStylesheets().getDefaultStylesURL());
+        stylesheetState.setDefaultMaximizedStylesheetURL(pluginContext.getStylesheets().getDefaultMaximizedURL());
 
         this.pluginContext = pluginContext;
         ConfigurationState.instance.setConfigurationDirectory(pluginContext.getConfigurationDirectoryPath());
@@ -83,7 +94,6 @@ public class GitPlugin implements Plugin {
         try {
             RepositoryState.instance.setRepo(Git.open(file));
             gitMenu.getItems().get(0).setDisable(true);
-            gitMenu.getItems().get(1).setDisable(true);
             gitMenu.getItems().get(2).setDisable(false);
             gitMenu.getItems().get(3).setDisable(false);
 
@@ -94,7 +104,6 @@ public class GitPlugin implements Plugin {
             serviceState.getGitService().resetListViews();
         } catch (IOException e) {
             gitMenu.getItems().get(0).setDisable(false);
-            gitMenu.getItems().get(1).setDisable(false);
             gitMenu.getItems().get(2).setDisable(true);
             gitMenu.getItems().get(3).setDisable(true);
 
@@ -131,5 +140,10 @@ public class GitPlugin implements Plugin {
         if (repositoryState.getRepo() != null) {
             serviceState.getGitService().resetListViews();
         }
+    }
+
+    @Override
+    public void onThemeChange(URL url) {
+        StylesheetState.instance.setThemeURL(url);
     }
 }
