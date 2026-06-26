@@ -1,12 +1,14 @@
 package com.bwxor.piejfxsdk.state;
 
 import javafx.scene.control.ListView;
+import javafx.scene.control.Menu;
 import javafx.scene.control.TextArea;
 
 public class UIState {
     private ListView stagedListView;
     private ListView unstagedListView;
     private TextArea commitMessageTextArea;
+    private Menu gitMenu;
     public static final UIState instance = new UIState();
 
     public ListView getStagedListView() {
@@ -31,5 +33,13 @@ public class UIState {
 
     public void setCommitMessageTextArea(TextArea commitMessageTextArea) {
         this.commitMessageTextArea = commitMessageTextArea;
+    }
+
+    public Menu getGitMenu() {
+        return gitMenu;
+    }
+
+    public void setGitMenu(Menu gitMenu) {
+        this.gitMenu = gitMenu;
     }
 }

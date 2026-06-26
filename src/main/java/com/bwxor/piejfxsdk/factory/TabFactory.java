@@ -149,4 +149,5 @@ public class TabFactory {
 
         return commitLogButton;
     }
+
 }

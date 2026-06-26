@@ -12,10 +12,12 @@ import com.bwxor.piejfxsdk.type.CloneViewDialogChoice;
 import com.bwxor.piejfxsdk.util.StringUtil;
 import javafx.application.Platform;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.PullResult;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.lib.PersonIdent;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
@@ -32,6 +34,7 @@ import org.eclipse.jgit.treewalk.EmptyTreeIterator;
 import org.eclipse.jgit.treewalk.TreeWalk;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -600,6 +603,78 @@ public class GitService {
         } catch (Exception e) {
             serviceState.getNotificationService()
                     .showNotificationOk("Unexpected error.\n" + e.getMessage());
+        }
+    }
+
+    public List<String> listBranches() {
+        RepositoryState repositoryState = RepositoryState.instance;
+        ServiceState serviceState = ServiceState.instance;
+
+        List<String> names = new ArrayList<>();
+        try {
+            List<Ref> refs = repositoryState.getRepo().branchList()
+                    .setListMode(ListBranchCommand.ListMode.ALL)
+                    .call();
+            String currentBranch = repositoryState.getRepo().getRepository().getBranch();
+            for (Ref ref : refs) {
+                String name = ref.getName()
+                        .replaceFirst("^refs/heads/", "")
+                        .replaceFirst("^refs/remotes/", "remotes/");
+                // Mark current branch
+                if (name.equals(currentBranch)) {
+                    names.add(0, "* " + name);
+                } else {
+                    names.add(name);
+                }
+            }
+        } catch (Exception e) {
+            serviceState.getNotificationService().showNotificationOk("Could not list branches.");
+        }
+        return names;
+    }
+
+    public boolean branchExists(String branchName) {
+        RepositoryState repositoryState = RepositoryState.instance;
+        try {
+            List<Ref> refs = repositoryState.getRepo().branchList().call();
+            for (Ref ref : refs) {
+                String name = ref.getName().replaceFirst("^refs/heads/", "");
+                if (name.equals(branchName)) return true;
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    public void checkoutBranch(String branchName) {
+        ServiceState serviceState = ServiceState.instance;
+        RepositoryState repositoryState = RepositoryState.instance;
+        UIState uiState = UIState.instance;
+
+        String name = branchName.startsWith("* ") ? branchName.substring(2) : branchName;
+
+        try {
+            repositoryState.getRepo().checkout().setName(name).call();
+            String newBranch = repositoryState.getRepo().getRepository().getBranch();
+            uiState.getGitMenu().setText("⚡ " + repositoryState.getRepo().getRepository().getBranch());
+            resetListViews();
+            serviceState.getNotificationService().showNotificationOk("Switched to branch: " + newBranch);
+        } catch (Exception e) {
+            serviceState.getNotificationService().showNotificationOk("Could not checkout branch: " + name);
+        }
+    }
+
+    public void createAndCheckoutBranch(String branchName) {
+        ServiceState serviceState = ServiceState.instance;
+        RepositoryState repositoryState = RepositoryState.instance;
+        UIState uiState = UIState.instance;
+
+        try {
+            repositoryState.getRepo().checkout().setCreateBranch(true).setName(branchName).call();
+            uiState.getGitMenu().setText("⚡ " + repositoryState.getRepo().getRepository().getBranch());
+            resetListViews();
+            serviceState.getNotificationService().showNotificationOk("Created and switched to branch: " + branchName);
+        } catch (GitAPIException | IOException e) {
+            serviceState.getNotificationService().showNotificationOk("Could not create branch: " + branchName);
         }
     }
 }

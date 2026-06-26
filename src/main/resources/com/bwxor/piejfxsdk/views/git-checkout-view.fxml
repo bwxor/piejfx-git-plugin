@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onKeyPressed="#onKeyPressed"
+            prefHeight="420.0" prefWidth="480.0" styleClass="window-root" xmlns="http://javafx.com/javafx/17.0.12"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.bwxor.piejfxsdk.controller.impl.GitCheckoutViewController">
+    <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="app-window"
+          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+          AnchorPane.topAnchor="0.0" VBox.vgrow="ALWAYS">
+        <children>
+            <AnchorPane fx:id="titleBarAnchorPane" onMouseDragged="#handleMovementAction"
+                        onMousePressed="#handleClickAction" prefHeight="35.0" prefWidth="480.0">
+                <children>
+                    <Label fx:id="windowTitle" alignment="CENTER" prefHeight="35.0" styleClass="window-title"
+                           text="Checkout Branch" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+                           AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
+                    <Button fx:id="closeButton" mnemonicParsing="false" onAction="#onCloseButtonClick"
+                            prefHeight="25.0" prefWidth="40.0" styleClass="button-close" text="✕"
+                            AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="5.0"/>
+                    <Button fx:id="minimizeButton" mnemonicParsing="false" onAction="#onMinimizeButtonClick"
+                            prefHeight="25.0" prefWidth="40.0" styleClass="button-minimize" text="─"
+                            AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="5.0"/>
+                </children>
+            </AnchorPane>
+
+            <AnchorPane styleClass="main-content" VBox.vgrow="ALWAYS">
+                <VBox spacing="8" AnchorPane.topAnchor="10.0" AnchorPane.leftAnchor="10.0"
+                      AnchorPane.rightAnchor="10.0" AnchorPane.bottomAnchor="10.0">
+                    <TextField fx:id="filterTextField" promptText="Filter branches..."/>
+                    <ListView fx:id="branchListView" onMouseClicked="#onListMouseClicked" VBox.vgrow="ALWAYS"/>
+                </VBox>
+            </AnchorPane>
+        </children>
+        <VBox.margin>
+            <Insets/>
+        </VBox.margin>
+    </VBox>
+    <padding>
+        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+    </padding>
+</AnchorPane>

@@ -1,10 +1,12 @@
 package com.bwxor.piejfxsdk.state;
 
 import com.bwxor.piejfxsdk.service.ConfigurationService;
+import com.bwxor.piejfxsdk.service.GitCheckoutViewService;
 import com.bwxor.piejfxsdk.service.GitCloneViewService;
 import com.bwxor.piejfxsdk.service.GitCommitFilesViewService;
 import com.bwxor.piejfxsdk.service.GitFileDiffViewService;
 import com.bwxor.piejfxsdk.service.GitLogViewService;
+import com.bwxor.piejfxsdk.service.GitNewBranchViewService;
 import com.bwxor.piejfxsdk.service.GitService;
 import com.bwxor.piejfxsdk.service.ResourceService;
 import com.bwxor.plugin.service.PluginFileService;
@@ -21,6 +23,8 @@ public class ServiceState {
     private GitLogViewService gitLogViewService;
     private GitCommitFilesViewService gitCommitFilesViewService;
     private GitFileDiffViewService gitFileDiffViewService;
+    private GitCheckoutViewService gitCheckoutViewService;
+    private GitNewBranchViewService gitNewBranchViewService;
     public static final ServiceState instance = new ServiceState();
 
     private ServiceState() {}
@@ -95,5 +99,21 @@ public class ServiceState {
 
     public void setGitFileDiffViewService(GitFileDiffViewService gitFileDiffViewService) {
         this.gitFileDiffViewService = gitFileDiffViewService;
+    }
+
+    public GitCheckoutViewService getGitCheckoutViewService() {
+        return gitCheckoutViewService;
+    }
+
+    public void setGitCheckoutViewService(GitCheckoutViewService gitCheckoutViewService) {
+        this.gitCheckoutViewService = gitCheckoutViewService;
+    }
+
+    public GitNewBranchViewService getGitNewBranchViewService() {
+        return gitNewBranchViewService;
+    }
+
+    public void setGitNewBranchViewService(GitNewBranchViewService gitNewBranchViewService) {
+        this.gitNewBranchViewService = gitNewBranchViewService;
     }
 }
