@@ -10,6 +10,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
 public class GitCloneViewController extends MovableViewController {
@@ -21,6 +22,8 @@ public class GitCloneViewController extends MovableViewController {
     private TextField destinationTextArea;
     @FXML
     private Button buttonClone;
+    @FXML
+    private Button browseButton;
 
     private CloneViewResponse cloneViewResponse;
 
@@ -76,6 +79,26 @@ public class GitCloneViewController extends MovableViewController {
         }
         else {
             buttonClone.setDisable(false);
+        }
+    }
+
+    @FXML
+    public void onBrowseButtonClick() {
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setTitle("Select Destination Folder");
+        String current = destinationTextArea.getText().trim();
+        if (!current.isEmpty()) {
+            java.io.File initialDir = new java.io.File(current);
+            if (initialDir.isDirectory()) {
+                directoryChooser.setInitialDirectory(initialDir);
+            }
+        }
+        java.io.File selected = directoryChooser.showDialog(browseButton.getScene().getWindow());
+        if (selected != null) {
+            destinationTextArea.setText(selected.getAbsolutePath());
+            if (!repoTextArea.getText().trim().isEmpty()) {
+                buttonClone.setDisable(false);
+            }
         }
     }
 

@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 
 <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onKeyPressed="#onKeyPressed"
-            prefHeight="130.0" prefWidth="350.0" styleClass="window-root" xmlns="http://javafx.com/javafx/17.0.12"
+            prefHeight="130.0" prefWidth="380.0" styleClass="window-root" xmlns="http://javafx.com/javafx/17.0.12"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.bwxor.piejfxsdk.controller.impl.GitCloneViewController">
     <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="app-window"
@@ -42,11 +42,19 @@
                             promptText="Repository URL"
                             onKeyTyped="#onTextAreaKeyTyped"/>
 
-                    <TextField
-                            fx:id="destinationTextArea"
-                            maxWidth="Infinity"
-                            promptText="Destination"
-                            onKeyTyped="#onDestinationTextAreaKeyTyped"/>
+                    <HBox spacing="5" fillHeight="true">
+                        <TextField
+                                fx:id="destinationTextArea"
+                                maxWidth="Infinity"
+                                promptText="Destination"
+                                onKeyTyped="#onDestinationTextAreaKeyTyped"
+                                HBox.hgrow="ALWAYS"/>
+                        <Button
+                                fx:id="browseButton"
+                                mnemonicParsing="false"
+                                onAction="#onBrowseButtonClick"
+                                text="..."/>
+                    </HBox>
 
                     <ButtonBar AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0">
                         <buttons>
