@@ -13,6 +13,7 @@ import com.bwxor.piejfxsdk.service.GitService;
 import com.bwxor.piejfxsdk.service.ResourceService;
 import com.bwxor.piejfxsdk.state.*;
 import com.bwxor.plugin.Plugin;
+import com.bwxor.plugin.dto.TabState;
 import com.bwxor.plugin.input.PluginContext;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
@@ -167,5 +168,10 @@ public class GitPlugin implements Plugin {
     @Override
     public void onThemeChange(URL url) {
         StylesheetState.instance.setThemeURL(url);
+    }
+
+    @Override
+    public void onTabChange(TabState tabState) {
+
     }
 }
